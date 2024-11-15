@@ -1,55 +1,77 @@
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');  // Thêm dòng này để import jwt
 const dotenv = require('dotenv');
 dotenv.config();
 
-const authMiddleware = (req, res, next) => {
-    const token = req.headers.token.split(' ')[1];
-    jwt.verify(token, process.env.ACCESS_TOKEN, function(err, user) {
-        if (err) {
-            return res.status(404).json({
-                message: 'The authentication failed',
-                status: 'ERROR'
-            });
-        }
+const verifyToken = (token) => {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, process.env.ACCESS_TOKEN, (err, user) => {
+            if (err) reject(err);
+            resolve(user);
+        });
+    });
+}
 
+const authMiddleware = async (req, res, next) => {
+    const token = req.headers.token;
+    if (!token) {
+        return res.status(400).json({
+            message: 'Token is missing',
+            status: 'ERR'
+        });
+    }
+
+    try {
+        const user = await verifyToken(token.split(' ')[1]);
         const { payload } = user;
 
-        if (payload?.isAdmin) {
-            return next(); // Nếu là admin, cho phép tiếp tục
+        if (payload?.admin) {
+            return next();
         } else {
             return res.status(403).json({
                 message: 'Permission denied',
-                status: 'ERROR'
+                status: 'ERR'
             });
         }
-    });
-};
+    } catch (err) {
+        return res.status(401).json({
+            message: 'Authentication failed',
+            status: 'ERR'
+        });
+    }
+}
 
-const authUerMiddleWare = (req, res, next) => {
-    const token = req.headers.token.split(' ')[1];
-    const userId= req.params.id
-    jwt.verify(token, process.env.ACCESS_TOKEN, function(err, user) {
-        if (err) {
-            return res.status(404).json({
-                message: 'The authentication failed',
-                status: 'ERROR'
-            });
-        }
+const authUserMiddleware = async (req, res, next) => {
+    const token = req.headers.token;
+    if (!token) {
+        return res.status(400).json({
+            message: 'Token is missing',
+            status: 'ERR'
+        });
+    }
 
+    const userId = req.params.id;
+
+    try {
+        const user = await verifyToken(token.split(' ')[1]);
         const { payload } = user;
 
-        if (payload?.isAdmin || payload?.id === userId) {
-            return next(); // Nếu là admin, cho phép tiếp tục
+        if (user?.admin || user?.id === userId) {
+            return next();
         } else {
             return res.status(403).json({
                 message: 'Permission denied',
-                status: 'ERROR'
+                status: 'ERR'
             });
         }
-    });
-};
+    } catch (err) {
+        return res.status(401).json({
+            message: 'Authentication failed',
+            status: 'ERR'
+        });
+    }
+}
 
 module.exports = {
     authMiddleware,
-    authUerMiddleWare
-}
+    authUserMiddleware
+};

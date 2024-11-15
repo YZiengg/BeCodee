@@ -2,6 +2,7 @@ const UserService = require('../services/UserService');
 const JwtService = require('../services/JwtService');
 
 
+
 const createUser = async (req, res) => {
     try {
         const {  email, password, confirmPassword } = req.body;
@@ -55,9 +56,11 @@ const loginUser = async (req, res) => {
         const response = await UserService.loginUser(req.body);
         const {refresh_token,...newReponse}=response
         // console.log('response',response)
-        res.cookie('refresh_token',refreshToken,{
-            HttpOnly:true,
-            Secure: true,
+        res.cookie('refresh_token',refresh_token,{
+            httpOnly:true,
+            secure: false,
+            samesite:'strict',
+            path:'/'
         })
         return res.status(200).json(newReponse);
     } catch (e) {
@@ -128,7 +131,7 @@ const getDetailsUser = async (req, res) => {
                 message: 'ID người dùng là bắt buộc'
             });
         }
-        const response = await UserService.getDetailsUser(userId);
+        const response = await UserService.getDetailUser(userId);
         return res.status(200).json(response);
     } catch (e) {
         return res.status(500).json({
@@ -138,9 +141,9 @@ const getDetailsUser = async (req, res) => {
 };
 
 const refreshToken = async (req, res) => {
-    console.log('req.cookies', req.cookies)
+    console.log('req.cookies.refresh_token', req.cookies.refresh_token)
     try {
-        const token = req.headers.token.split(' ')[1]
+        const token = req.cookies.refresh_token
         if (!token) {
             return res.status(400).json({
                 status: 'ERR',
@@ -156,6 +159,20 @@ const refreshToken = async (req, res) => {
     }
 };
 
+const logoutUser = async (req, res) => {
+    console.log('req.cookies.refresh_token', req.cookies.refresh_token)
+    try {
+       res.clearCookie('refresh_token')
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Đăng xuất thành công'
+        });
+    } catch (e) {
+        return res.status(500).json({
+            message: e.message
+        });
+    }
+};
 module.exports = {
     createUser,
     loginUser,
@@ -163,5 +180,6 @@ module.exports = {
     deleteUser,
     getAllUser,
     getDetailsUser,
-    refreshToken
+    refreshToken,
+    logoutUser
 };
