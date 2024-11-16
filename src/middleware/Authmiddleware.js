@@ -34,7 +34,7 @@ const authMiddleware = async (req, res, next) => {
         }
     } catch (err) {
         return res.status(401).json({
-            message: 'Authentication failed',
+            message: 'Authentication failedđd',
             status: 'ERR'
         });
     }
@@ -65,7 +65,7 @@ const authUserMiddleware = async (req, res, next) => {
         }
     } catch (err) {
         return res.status(401).json({
-            message: 'Authentication failed',
+            message: 'Authentication failedê',
             status: 'ERR'
         });
     }
