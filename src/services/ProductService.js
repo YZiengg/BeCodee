@@ -169,7 +169,7 @@ const getDetailProduct = (id) => {
             }
                 resolve({
                     status: 'OK',
-                    message: 'deleted product',
+                    message: 'get product',
                     data: product
                 });
         } catch (e) {
